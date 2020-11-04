@@ -1,0 +1,1 @@
+c:\Jdk\zulu15.27.17-ca-jdk15.0.0-win_x64\bin\java -classpath "./out/production/TimeSeries;./out/test/TimeSeries" -Xms4G -Xmx4G net.openhft.orabelt.timeseries.InMemoryTimeSeriesTest %1

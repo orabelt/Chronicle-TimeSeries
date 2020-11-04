@@ -1,0 +1,1 @@
+c:\Jdk\jdk1.8.0.252-2.b09.redhat.windows.x86_64\bin\java -classpath "./out/production/TimeSeries;./out/test/TimeSeries" -Xms4G -Xmx4G net.openhft.orabelt.timeseries.InMemoryTimeSeriesTest %1
