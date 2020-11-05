@@ -21,8 +21,7 @@ package net.openhft.orabelt.timeseries;
 import net.openhft.orabelt.timeseries.memlayout.BytesDoubleLookups;
 import net.openhft.orabelt.timeseries.memlayout.BytesLongLookups;
 import net.openhft.orabelt.timeseries.memlayout.BytesStore;
-import net.openhft.orabelt.timeseries.memlayout.carrier.LongArrayByteStore;
-import net.openhft.orabelt.timeseries.memlayout.carrier.UnsafeBytesStore;
+import net.openhft.orabelt.timeseries.memlayout.carrier.*;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -41,11 +40,26 @@ import java.util.concurrent.ThreadLocalRandom;
 public class InMemoryTimeSeriesTest {
 
     public static void main(String args[]) throws Exception {
-        new InMemoryTimeSeriesTest().testBidAsk();
+        final long size = 100_000_000; //~800Mb per item, use -Xms4096m -Xmx4096m and windows swap
+
+        System.out.println(" Warm up");
+        new InMemoryTimeSeriesTest().testBidAsk(size); // warm up
+        Thread.sleep(200);
+
+//        System.out.println(" Go!");
+//        new InMemoryTimeSeriesTest().testBidAsk(size);
+//        Thread.sleep(200);
+//        new InMemoryTimeSeriesTest().testBidAsk(size);
+//        Thread.sleep(200);
+//        new InMemoryTimeSeriesTest().testBidAsk(size);
+//        Thread.sleep(200);
+//        new InMemoryTimeSeriesTest().testBidAsk(size);
+//        Thread.sleep(200);
+//        new InMemoryTimeSeriesTest().testBidAsk(size);
     }
 
     //@Test
-    public void testBidAsk() throws ExecutionException, InterruptedException {
+    public void testBidAsk(final long size) throws ExecutionException, InterruptedException {
         TimeSeries ts = new InMemoryTimeSeries(LongArrayByteStore::new);
         LongColumn time = ts.getTimestamp();
 
@@ -62,10 +76,10 @@ public class InMemoryTimeSeriesTest {
         //DoubleColumn ask = ts.createDoubleColumn("ask");
         //LongColumn spread = ts.createLongColumn("spread");
 
-        final long size = 100_000_000; //~800Mb per item, use -Xms4096m -Xmx4096m and windows swap
         ts.allocate(size);
 
-        int threads = Runtime.getRuntime().availableProcessors() * 2 - 1;
+        int threads = Math.max(1, Runtime.getRuntime().availableProcessors() - 1);
+        //int threads = Runtime.getRuntime().availableProcessors() * 2 - 1;
         //threads = 1;
         long block = (((((size + threads - 1) / threads) - 1) | 63) + 1);
 
@@ -79,7 +93,7 @@ public class InMemoryTimeSeriesTest {
                 long first = finalI * block;
                 for (int j = 0, max = (int) Math.min(size - first, block); j < max; j++) {
                     long v = first + j;
-                    time.set(v, v);
+                    time.set(v, v+v);
                     int r1 = rand.nextInt(1000);
                     int r2 = rand.nextInt(1000);
                     bid.set(v, Math.min(r1, r2) / 1000d);
@@ -105,7 +119,7 @@ public class InMemoryTimeSeriesTest {
             double r2 = ask.get(i);
             long r = spread.get(i);
 
-            if (v != i) residuals++;
+            if (v != i*2) residuals++;
             if (Math.abs(r1 * 1000 - r2 * 1000) > Math.abs(r)) residuals++;
         }
 
@@ -113,12 +127,12 @@ public class InMemoryTimeSeriesTest {
         System.out.printf("%d get threads took %.3f secs, %d ops/mics, residuals: %d %n", 1, took / 1000d, size/took/1000, residuals);
 
         for (BytesStore s : store)
-            if (s instanceof Closeable)
-                try { ((Closeable) s).close(); } catch (IOException e) { e.printStackTrace(); } finally {
-                    System.out.print(s.getClass().getSimpleName() + ":close(" + s.getAllocatedBytes() + "), ");
-                }
+            if (s instanceof Closeable) {
+                System.out.print(s.getClass().getSimpleName() + ":close(" + s.getAllocatedBytes()/1024/1024 + "Mb), ");
+                try { ((Closeable) s).close(); } catch (IOException e) { e.printStackTrace(); }
+            }
 
-        System.out.print("\nDone.");
+        System.out.println("\nDone.");
     }
 
 
