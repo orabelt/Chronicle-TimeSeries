@@ -48,5 +48,7 @@ public class InMemoryColumn<T> extends AbstractColumn implements Column<T> {
     @Override
     public void ensureCapacity(long capacity) {
         list.ensureCapacity(Math.toIntExact(capacity));
+		while (list.size() < capacity)
+            list.add(null);
     }
 }
