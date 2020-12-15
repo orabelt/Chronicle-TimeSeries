@@ -35,8 +35,8 @@ public class InMemoryColumn<T> extends AbstractColumn implements Column<T> {
     @Override
     public void set(long index, T t) {
         int index0 = Math.toIntExact(index);
-//        while (list.size() <= index0)
-//            list.add(null);
+        while (list.size() <= index0)
+            list.add(null);
         list.set(index0, t);
     }
 
