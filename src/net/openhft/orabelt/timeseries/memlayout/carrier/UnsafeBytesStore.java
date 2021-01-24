@@ -56,8 +56,11 @@ public class UnsafeBytesStore implements BytesStore, Closeable {
 
         try {
             unsafeAlloc(capacity);
-            if (fromSize > 0)
+            if (fromSize > 0) {
                 UnsafeBytesStore.UU.copyMemory(fromAddress, base, fromSize);
+                if (fromAddress != 0L)
+                    UU.freeMemory(fromAddress);
+            }
 
             return true;
         } catch (OutOfMemoryError e) {

@@ -17,9 +17,7 @@ public class DirectBufferBytesStore implements BytesStore, Closeable {
 
     private ByteBuffer bb;
 
-    public DirectBufferBytesStore() {
-        bb = byteBufferAlloc(0);
-    }
+    public DirectBufferBytesStore() { bb = byteBufferAlloc(0); }
 
     protected ByteBuffer byteBufferAlloc(long capacity) {
         return ByteBuffer.allocateDirect(Math.toIntExact(capacity)).order(ByteOrder.nativeOrder());
@@ -56,6 +54,7 @@ public class DirectBufferBytesStore implements BytesStore, Closeable {
                 long fromAddress = ((DirectBuffer) bb).address();
                 long address = ((DirectBuffer) bbEx).address();
                 UnsafeBytesStore.UU.copyMemory(fromAddress, address, bb.capacity());
+                //todo: clean fromAddress
             }
 
             bb = bbEx;
